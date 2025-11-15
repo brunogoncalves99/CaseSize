@@ -21,7 +21,8 @@ namespace CaseSize.Controllers
         /// <summary>
         /// Calcula o valor líquido da antecipação para um conjunto de notas fiscais.
         /// </summary>
-        [HttpPost("calcular")]
+        [HttpPost]
+        [Route("CalcularAntecipacao")]
         public async Task<IActionResult> CalcularAntecipacao([FromBody] AntecipacaoDtoRequest request) 
         {
             if (request.NotasFiscaisId == null || !request.NotasFiscaisId.Any())

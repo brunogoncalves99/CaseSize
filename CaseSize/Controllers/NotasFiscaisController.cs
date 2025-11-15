@@ -1,11 +1,12 @@
 ﻿using CaseSize.DTO;
 using CaseSize.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CaseSize.Controllers
 {
-    [ApiController]
-    [Route("api/empresas/{cnpj}/notas")]
+    [AllowAnonymous]
+    [Route("api/v1/NotaFiscal")]
     public class NotasFiscaisController : ControllerBase
     {
         private readonly AntecipacaoService _service;
@@ -15,7 +16,13 @@ namespace CaseSize.Controllers
             _service = service;
         }
 
+        /// <summary>
+        /// Criação de notas fiscais para uma empresa específica.
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
         [HttpPost]
+        [Route("CriarNotaFiscal")]
         public async Task<IActionResult> CriarNotaFiscal([FromBody] NotaFiscalDto dto)
         {
             try
@@ -30,6 +37,13 @@ namespace CaseSize.Controllers
             }
         }
 
+        /// <summary>
+        /// Buscar Nota Fiscal pelo id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("buscarNota")]
         public async Task<IActionResult> GetNota(int id)
         {
             var notaFiscal = await _service.GetNotaFiscalById(id); 

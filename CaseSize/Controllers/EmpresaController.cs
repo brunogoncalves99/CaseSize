@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CaseSize.Controllers
 {
     [ApiController]
-    [Route("api/empresas")]
+    [Route("api/v1/Empresa")]
     public class EmpresaController : ControllerBase
     {
 
@@ -19,7 +19,14 @@ namespace CaseSize.Controllers
             _service = service;
         }
 
+        /// <summary>
+        /// Criação de uma nova empresa
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>]
+        /// 
         [HttpPost]
+        [Route("CriarEmpresa")]
         public async Task<IActionResult> CriarEmpresa([FromBody] EmpresaDto dto)
         {
             try
@@ -33,13 +40,18 @@ namespace CaseSize.Controllers
             }
         }
 
-        public async Task<IActionResult> Get(int id)
+
+        // <summary>
+        /// Buscar uma empresa pelo id
+        /// </summary>
+        [HttpGet]
+        [Route("empresaId")]
+        public async Task<IActionResult> Get(int empresaId)
         {
-            var empresa = await _service.GetEmpresaById(id); // Usando o Serviço para obter a empresa
+            var empresa = await _service.GetEmpresaById(empresaId);
             if (empresa == null)
-            {
-                return NotFound();
-            }
+                throw new ApplicationException("Empresa não encontrada");
+
             return Ok(empresa);
         }
     }
