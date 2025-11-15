@@ -143,7 +143,9 @@ public class AntecipacaoService
         {
             throw new KeyNotFoundException("Empresa não encontrada.");
         }
-        var notasFiscais = await _dbContext.NotasFiscais.Where(nf => notasFiscaisIds.Contains(nf.EmpresaId) && nf.EmpresaId == idEmpresa).ToListAsync();
+        // 1. Validação das Notas Fiscais // Ignorar antecipadas // seleciona apenas as notas pedidas
+        var notasFiscais = await _dbContext.NotasFiscais.Where(nf => notasFiscaisIds.Contains(nf.EmpresaId) && nf.EmpresaId == idEmpresa && nf.Status != "Antecipada").ToListAsync();
+
         if (notasFiscais.Count != notasFiscaisIds.Count)
         {
             throw new InvalidOperationException("Uma ou mais notas fiscais não foram encontradas, não pertencem à empresa ou já foram antecipadas.");
@@ -162,7 +164,9 @@ public class AntecipacaoService
             Empresa = empresa.Nome,
             CNPJ = empresa.CNPJ,
             Limite = empresa.LimiteCredito,
-            TotalBruto = totalBruto
+            TotalBruto = totalBruto,
+            TotalLiquido = 0, 
+            NotasFiscais = new List<NotaFiscalResultadoDto>()
         };
 
         decimal totalLiquido = 0;
@@ -171,7 +175,7 @@ public class AntecipacaoService
         foreach (var nota in notasFiscais)
         {
             var (valorLiquido, desagio) = CalcularAntecipacao(nota.ValorBruto, nota.DataVencimento, dataAtual);
-            // Atualizar total líquido
+
             resultadoDto.NotasFiscais.Add(new NotaFiscalResultadoDto
             {
                 Numero = nota.Numero,
@@ -179,24 +183,20 @@ public class AntecipacaoService
                 ValorLiquido = valorLiquido
             });
 
-            // Atualizar total líquido
-            var notaFiscal = new NotaFiscal
-            {
-                EmpresaId = idEmpresa,
-                Numero = nota.Numero,
-                ValorBruto = nota.ValorBruto,
-                DataVencimento = nota.DataVencimento,
-                Status = "Antecipada"
-            };
+            resultadoDto.TotalLiquido += Math.Round(valorLiquido, 2);
 
-            // Salvar as alterações no banco de dados
-            _dbContext.NotasFiscais.Update(notaFiscal);
+            // Atualizar NF no banco
+            nota.Status = "Antecipada";
+            nota.ValorLiquido = valorLiquido;
+            nota.Desagio = desagio;
+
+            // Salvar as modificações da nota fiscal no banco com o novo status, valor líquido e deságio
+            _dbContext.NotasFiscais.Update(nota);
         }
 
-        resultadoDto.TotalLiquido = Math.Round(totalLiquido, 2);
+        await _dbContext.SaveChangesAsync();
 
         return resultadoDto;
-
     }
 
     public async Task<Empresa?> GetEmpresaById(int id) // Método para obter uma empresa pelo ID

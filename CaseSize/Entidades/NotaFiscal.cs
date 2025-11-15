@@ -17,14 +17,19 @@ public class NotaFiscal
     [Required]
     public DateTime DataVencimento { get; set; }
 
-
     [Required]
     [StringLength(20)]
-    public string Status { get; set; } = "Pendente"; // Pendente, Antecipada, Cancelada
+    public string Status { get; set; } = "Pendente"; // Pendente, Antecipada
 
     public int EmpresaId { get; set; }
 
     // Propriedade de navegação com a chave estrangeira EmpresaId
     [ForeignKey("EmpresaId")]
     public Empresa? Empresa { get; set; }
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal ValorLiquido { get; set; }
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal Desagio { get; set; }
 }
