@@ -1,0 +1,48 @@
+﻿using CaseSize.DTO;
+using CaseSize.Service;
+using Microsoft.AspNetCore.Mvc;
+
+namespace CaseSize.Controllers
+{
+    public class AntecipacaoDtoRequest
+    {
+        public int EmpresaId { get; set; }
+        public List<int> NotasFiscaisId { get; set; }
+    }
+    public class AntecipacaoController : Controller
+    {
+        private readonly AntecipacaoService _service;
+
+        public AntecipacaoController(AntecipacaoService service)
+        {
+            _service = service;
+        }
+
+        /// <summary>
+        /// Calcula o valor líquido da antecipação para um conjunto de notas fiscais.
+        /// </summary>
+        [HttpPost("calcular")]
+        public async Task<IActionResult> CalcularAntecipacao([FromBody] AntecipacaoDtoRequest request) 
+        {
+            if (request.NotasFiscaisId == null || !request.NotasFiscaisId.Any())
+            {
+                return BadRequest(new { message = "Nenhuma nota fiscal selecionada para antecipação." });
+            }
+
+            try
+            {
+                var resultado = await _service.ProcessamentoAntecipacao(request.EmpresaId, request.NotasFiscaisId);
+
+                if (resultado == null)
+                {
+                    return NotFound(new { message = "Empresa ou notas fiscais não encontradas." });
+                }
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Erro interno ao processar antecipação.", details = ex.Message });
+            }
+        }
+    }
+}
