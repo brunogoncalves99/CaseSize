@@ -16,5 +16,4 @@ public class NotaFiscalDto
     [Required(ErrorMessage = "A Data de Vencimento é obrigatória.")]
     public DateTime DataVencimento { get; set; }
 
-
 }

@@ -4,9 +4,7 @@ using CaseSize.Entidades;
 using CaseSize.Entitades;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace CaseSize.Service;
-
 public class AntecipacaoService
 {
 
@@ -23,7 +21,7 @@ public class AntecipacaoService
         // 1. Verificar se CNPJ já existe
         if (await _dbContext.Empresas.AnyAsync(e => e.CNPJ == dto.CNPJ))
         {
-            throw new InvalidOperationException("Empresa com este CNPJ já cadastrada.");
+            throw new InvalidOperationException(Resources.Resources.CNPJExistente);
         }
 
         // 2. Calcular Limite de Crédito
@@ -51,14 +49,14 @@ public class AntecipacaoService
         // Verificar se a Data de Vencimento é maior que a data atual
         if (dto.DataVencimento.Date <= DateTime.Today)
         {
-            throw new InvalidOperationException("A Data de Vencimento deve ser maior que a data atual.");
+            throw new InvalidOperationException(Resources.Resources.NotaFiscalVencida);
         }
 
         // Verificar se a empresa existe caso existe antes de cadastrar a nota fiscal
         var empresa = await _dbContext.Empresas.FindAsync(dto.EmpresaId);
         if (empresa == null)
         {
-            throw new KeyNotFoundException("Empresa não encontrada.");
+            throw new KeyNotFoundException(Resources.Resources.EmpresaNaoCadastrada);
         }
 
         // 3. Criar Entidade de dados NotaFiscal para salvar no banco
@@ -68,7 +66,7 @@ public class AntecipacaoService
             Numero = dto.Numero,
             ValorBruto = dto.ValorBruto,
             DataVencimento = dto.DataVencimento.Date,
-            Status = "Pendente"
+            Status = Resources.Resources.StatusPendente
         };
 
         // 4. Salvar
@@ -107,7 +105,7 @@ public class AntecipacaoService
 
     public (decimal ValorLiquido, decimal Desagio) CalcularAntecipacao(decimal valorBruto, DateTime dataVencimento, DateTime dataAtual)
     {
-        // 1. Prazo em dias
+        // Prazo em dias
         int prazoEmDias = (dataVencimento.Date - dataAtual.Date).Days;
 
         // Se o prazo for zero ou negativo, não há antecipação válida
@@ -116,17 +114,17 @@ public class AntecipacaoService
             return (valorBruto, 0m);
         }
 
-        // 2. Prazo em meses (fração)
+        // Prazo em meses (fração)
         double prazoEmMeses = (double)prazoEmDias / 30.0;
 
-        // 3. Fator de Desconto (1 + TaxaMensal)^(PrazoEmMeses)
+        // Fator de Desconto (1 + TaxaMensal)^(PrazoEmMeses)
         double fatorDesconto = (double)(1 + TaxaMes);
         double denominador = Math.Pow(fatorDesconto, prazoEmMeses);
 
-        // 4. Valor Líquido (Valor Presente)
+        // Valor Líquido (Valor Presente)
         decimal valorLiquido = valorBruto / (decimal)denominador;
 
-        // 5. Deságio
+        // Deságio
         decimal desagio = valorBruto - valorLiquido;
 
         // Arredondamento para duas casas decimais
@@ -138,24 +136,27 @@ public class AntecipacaoService
 
     public async Task<AntecipacaoResultadoDto> ProcessamentoAntecipacao(int idEmpresa, List<int> notasFiscaisIds)
     {
+        decimal totalLiquido = 0;
+        DateTime dataAtual = DateTime.Today;
+
         var empresa = await _dbContext.Empresas.FindAsync(idEmpresa); 
         if (empresa == null)
         {
-            throw new KeyNotFoundException("Empresa não encontrada.");
+            throw new KeyNotFoundException(Resources.Resources.EmpresaNaoEncontrada);
         }
-        // 1. Validação das Notas Fiscais // Ignorar antecipadas // seleciona apenas as notas pedidas
-        var notasFiscais = await _dbContext.NotasFiscais.Where(nf => notasFiscaisIds.Contains(nf.EmpresaId) && nf.EmpresaId == idEmpresa && nf.Status != "Antecipada").ToListAsync();
+        // Validação das Notas Fiscais // Ignorar antecipadas // Seleciona apenas as notas pedidas
+        var notasFiscais = await _dbContext.NotasFiscais.Where(nf=> notasFiscaisIds.Contains(nf.NotaFiscalId) && nf.EmpresaId == idEmpresa && nf.Status != "Antecipada").ToListAsync();
 
         if (notasFiscais.Count != notasFiscaisIds.Count)
         {
-            throw new InvalidOperationException("Uma ou mais notas fiscais não foram encontradas, não pertencem à empresa ou já foram antecipadas.");
+            throw new InvalidOperationException(Resources.Resources.NotaFiscal_E_Empresa_NaoEncontrada);
         }
 
-        // 2. Validação de Limite
+        // Junção do valor total das notas fiscais
         decimal totalBruto = notasFiscais.Sum(nf => nf.ValorBruto);
         if (totalBruto > empresa.LimiteCredito)
         {
-            throw new InvalidOperationException($"O valor total das notas ({totalBruto:C}) excede o limite de crédito da empresa ({empresa.LimiteCredito:C}).");
+            throw new InvalidOperationException(string.Format(Resources.Resources.NotaFiscal_Execede_Limite_Credito, totalBruto, empresa.LimiteCredito));
         }
 
         // 3. Cálculo da Antecipação
@@ -169,12 +170,9 @@ public class AntecipacaoService
             NotasFiscais = new List<NotaFiscalResultadoDto>()
         };
 
-        decimal totalLiquido = 0;
-        DateTime dataAtual = DateTime.Today;
-
         foreach (var nota in notasFiscais)
         {
-            var (valorLiquido, desagio) = CalcularAntecipacao(nota.ValorBruto, nota.DataVencimento, dataAtual);
+            var (valorLiquido , desagio) = CalcularAntecipacao(nota.ValorBruto, nota.DataVencimento, dataAtual);
 
             resultadoDto.NotasFiscais.Add(new NotaFiscalResultadoDto
             {
@@ -183,18 +181,17 @@ public class AntecipacaoService
                 ValorLiquido = valorLiquido
             });
 
-            resultadoDto.TotalLiquido += Math.Round(valorLiquido, 2);
+            resultadoDto.TotalLiquido += valorLiquido;
 
             // Atualizar NF no banco
-            nota.Status = "Antecipada";
+            nota.Status = Resources.Resources.StatusAntecipada;
             nota.ValorLiquido = valorLiquido;
             nota.Desagio = desagio;
 
             // Salvar as modificações da nota fiscal no banco com o novo status, valor líquido e deságio
             _dbContext.NotasFiscais.Update(nota);
+            await _dbContext.SaveChangesAsync();
         }
-
-        await _dbContext.SaveChangesAsync();
 
         return resultadoDto;
     }
@@ -208,5 +205,4 @@ public class AntecipacaoService
     {
         return await _dbContext.NotasFiscais.FindAsync(id);
     }
-
 }

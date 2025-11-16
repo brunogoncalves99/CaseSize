@@ -2,6 +2,6 @@
 
 public enum RamoEmpresa
 {
-    Servicos,
-    Produtos
+    Servicos = 1,
+    Produtos = 2
 }

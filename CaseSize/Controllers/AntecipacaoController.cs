@@ -4,11 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CaseSize.Controllers
 {
-    public class AntecipacaoDtoRequest
-    {
-        public int EmpresaId { get; set; }
-        public List<int> NotasFiscaisId { get; set; }
-    }
+
     public class AntecipacaoController : Controller
     {
         private readonly AntecipacaoService _service;
@@ -16,6 +12,12 @@ namespace CaseSize.Controllers
         public AntecipacaoController(AntecipacaoService service)
         {
             _service = service;
+        }
+
+        public class AntecipacaoDtoRequest
+        {
+            public int EmpresaId { get; set; }
+            public List<int> NotasFiscaisId { get; set; }
         }
 
         /// <summary>
@@ -27,7 +29,7 @@ namespace CaseSize.Controllers
         {
             if (request.NotasFiscaisId == null || !request.NotasFiscaisId.Any())
             {
-                return BadRequest(new { message = "Nenhuma nota fiscal selecionada para antecipação." });
+                return BadRequest(new { message = Resources.Resources.ErroProcessamentoAntecipacao });
             }
 
             try
@@ -36,13 +38,13 @@ namespace CaseSize.Controllers
 
                 if (resultado == null)
                 {
-                    return NotFound(new { message = "Empresa ou notas fiscais não encontradas." });
+                    return NotFound(new { message = Resources.Resources.Empresa_NotasFiscais_NaoEncontradas });
                 }
                 return Ok(resultado);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Erro interno ao processar antecipação.", details = ex.Message });
+                return StatusCode(500, new { message = Resources.Resources.ErroProcessarAntecipacao, details = ex.Message });
             }
         }
     }

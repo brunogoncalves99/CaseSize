@@ -36,7 +36,7 @@ namespace CaseSize.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Erro interno ao cadastrar empresa.", details = ex.Message });
+                return StatusCode(500, new { message = Resources.Resources.ErroCadastroEmpresa, details = ex.Message });
             }
         }
 
@@ -50,7 +50,7 @@ namespace CaseSize.Controllers
         {
             var empresa = await _service.GetEmpresaById(empresaId);
             if (empresa == null)
-                throw new ApplicationException("Empresa não encontrada");
+                throw new ApplicationException(Resources.Resources.EmpresaNaoEncontrada);
 
             return Ok(empresa);
         }

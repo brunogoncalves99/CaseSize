@@ -33,7 +33,7 @@ namespace CaseSize.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Erro interno ao cadastrar nota fiscal.", details = ex.Message });
+                return StatusCode(500, new { message = Resources.Resources.ErroCadastroNotaFiscal, details = ex.Message });
             }
         }
 
