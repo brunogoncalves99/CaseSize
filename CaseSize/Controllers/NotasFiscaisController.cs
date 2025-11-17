@@ -9,9 +9,9 @@ namespace CaseSize.Controllers
     [Route("api/v1/NotaFiscal")]
     public class NotasFiscaisController : ControllerBase
     {
-        private readonly AntecipacaoService _service;
+        private readonly NotaFiscalService _service;
 
-        public NotasFiscaisController(AntecipacaoService service) // Injetando o Serviço
+        public NotasFiscaisController(NotaFiscalService service) // Injetando o Serviço
         {
             _service = service;
         }

@@ -12,9 +12,9 @@ namespace CaseSize.Controllers
     public class EmpresaController : ControllerBase
     {
 
-        private readonly AntecipacaoService _service; 
+        private readonly EmpresaService _service; 
 
-        public EmpresaController(AntecipacaoService service) // Injetando o Serviço
+        public EmpresaController(EmpresaService service) // Injetando o Serviço
         {
             _service = service;
         }
