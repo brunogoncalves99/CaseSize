@@ -1,4 +1,3 @@
-# Case Size - Teste
+# Case Size - Teste Técnico 
 
-
-Criada a solução para Antecipação de Recebível
+Criada a solução para Antecipação de Recebível de empresa. 
