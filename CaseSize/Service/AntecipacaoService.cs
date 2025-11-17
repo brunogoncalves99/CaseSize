@@ -42,7 +42,7 @@ public class AntecipacaoService
             throw new InvalidOperationException(string.Format(Resources.Resources.NotaFiscal_Execede_Limite_Credito, totalBruto, empresa.LimiteCredito));
         }
 
-        // 3. Cálculo da Antecipação
+        //  Cálculo da Antecipação
         var resultadoDto = new AntecipacaoResultadoDto
         {
             Empresa = empresa.Nome,
