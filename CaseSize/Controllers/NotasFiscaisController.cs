@@ -11,7 +11,7 @@ namespace CaseSize.Controllers
     {
         private readonly NotaFiscalService _service;
 
-        public NotasFiscaisController(NotaFiscalService service) // Injetando o Serviço
+        public NotasFiscaisController(NotaFiscalService service) 
         {
             _service = service;
         }

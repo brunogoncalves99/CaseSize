@@ -14,7 +14,7 @@ namespace CaseSize.Controllers
 
         private readonly EmpresaService _service; 
 
-        public EmpresaController(EmpresaService service) // Injetando o Serviço
+        public EmpresaController(EmpresaService service) 
         {
             _service = service;
         }
