@@ -13,7 +13,7 @@ public class AntecipacaoService
 
     public AntecipacaoService(AppDbContext dbContext)
     {
-        _dbContext = dbContext; // Injeção de dependência do DbContext
+        _dbContext = dbContext; 
     }
 
     #region Processamento de Antecipação
